@@ -1,26 +1,89 @@
 import React from 'react';
 import { useParams } from 'react-router-dom';
 import { updatePatient, useStateValue } from '../state';
-import { Header, Icon } from 'semantic-ui-react';
+import { Header, Icon, List } from 'semantic-ui-react';
 import axios from 'axios';
-import { Diagnosis, Patient } from '../types';
+import { Diagnosis, HealthCheckRating, Patient, HealthCheckEntry, OccupationalHealthcareEntry, HospitalEntry } from '../types';
 import { apiBaseUrl } from '../constants';
-import { Entry } from '../types';
+import { Entry, } from '../types';
+
+const assertNever = (value: never): never => {
+  throw new Error(
+    `Unhandled discriminated union member: ${JSON.stringify(value)}`
+  );
+};
+
+const HospitalEntryDetail: React.FC<{ entry: HospitalEntry }> = ({ entry }) => {
+  return (
+    <div>
+      <Header as="h4">{entry.date} <Icon name="hospital" /></Header>
+      <p>{entry.description}</p>
+    </div>
+  );
+};
+
+const OccupationalHealthcareEntryDetail: React.FC<{ entry: OccupationalHealthcareEntry }> = ({ entry }) => {
+   return (
+    <div>
+      <Header as="h4">{entry.date} <Icon name="stethoscope" /> {entry.employerName}</Header>
+      <p>{entry.description}</p>
+    </div>
+  );
+};
+
+const HealthCheckEntryDetail: React.FC<{ entry: HealthCheckEntry }> = ({ entry }) => {
+  const HealthRatingIcon: React.FC<{ rating: HealthCheckRating }> = ({ rating }) => {
+    switch (rating) {
+      case HealthCheckRating.CriticalRisk: 
+        return <Icon name='heart' color="red" />;
+      case HealthCheckRating.Healthy:
+        return <Icon name='heart' color='green' />;
+      case HealthCheckRating.HighRisk:
+        return <Icon name='heart' color='orange' />;
+      case HealthCheckRating.LowRisk:
+        return <Icon name='heart' color='yellow' />;
+    }
+  };
+
+  return (
+    <div>
+      <Header as="h4">{entry.date} <Icon name="doctor" /></Header>
+      <p style={{ color: 'grey' }}>{entry.description}</p>
+      <HealthRatingIcon rating={entry.healthCheckRating} />
+    </div>
+  );
+};
+
+const EntryDetails: React.FC<{ entry: Entry }> = ({ entry }) => {
+  switch(entry.type) {
+    case 'Hospital':
+      return <HospitalEntryDetail entry={entry} />;
+    case 'OccupationalHealthcare':
+      return <OccupationalHealthcareEntryDetail entry={entry} />;
+    case 'HealthCheck':
+      return <HealthCheckEntryDetail entry={entry} />;
+    default:
+      return assertNever(entry);
+  }
+};
 
 interface EntriesProps {
   entries: Array<Entry>;
   diagnoses: { [code: string]: Diagnosis };
 }
+
 const Entries: React.FC<EntriesProps> = ({ entries, diagnoses }) => {
   return (
     <>
       <Header as="h3">entries</Header>
-      {entries.map(entry => {
-      return (<div key={entry.id}>
-        <p>{entry.date} {entry.description}</p>
-        {entry.diagnosisCodes && (<ul>{entry.diagnosisCodes.map(dc => <li key={dc}>{dc} {diagnoses[dc].name}</li>)}</ul>)}
-      </div>);
-      })}
+      <List celled>
+        {entries.map(entry => {
+          return (
+            <List.Item key={entry.id}>
+              <EntryDetails entry={entry} />
+            </List.Item>);
+        })}
+      </List>
     </>
   );
 };
