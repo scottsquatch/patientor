@@ -5,6 +5,21 @@ import { Header, Icon } from 'semantic-ui-react';
 import axios from 'axios';
 import { Patient } from '../types';
 import { apiBaseUrl } from '../constants';
+import { Entry } from '../types';
+
+const Entries: React.FC<{ entries: Array<Entry> }> = ({ entries }) => {
+  return (
+    <>
+      <Header as="h3">entries</Header>
+      {entries.map(entry => {
+      return (<div key={entry.id}>
+        <p>{entry.date} {entry.description}</p>
+        {entry.diagnosisCodes && (<ul>{entry.diagnosisCodes.map(dc => <li key={dc}>{dc}</li>)}</ul>)}
+      </div>);
+      })}
+    </>
+  );
+};
 
 const PatientPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -52,6 +67,7 @@ const PatientPage: React.FC = () => {
       occupation: {patient.occupation}<br />
       date of birth: {patient.dateOfBirth}
     </p>
+    <Entries entries={patient.entries} />
   </div>);
 };
 
