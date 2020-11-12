@@ -3,18 +3,22 @@ import { useParams } from 'react-router-dom';
 import { updatePatient, useStateValue } from '../state';
 import { Header, Icon } from 'semantic-ui-react';
 import axios from 'axios';
-import { Patient } from '../types';
+import { Diagnosis, Patient } from '../types';
 import { apiBaseUrl } from '../constants';
 import { Entry } from '../types';
 
-const Entries: React.FC<{ entries: Array<Entry> }> = ({ entries }) => {
+interface EntriesProps {
+  entries: Array<Entry>;
+  diagnoses: { [code: string]: Diagnosis };
+}
+const Entries: React.FC<EntriesProps> = ({ entries, diagnoses }) => {
   return (
     <>
       <Header as="h3">entries</Header>
       {entries.map(entry => {
       return (<div key={entry.id}>
         <p>{entry.date} {entry.description}</p>
-        {entry.diagnosisCodes && (<ul>{entry.diagnosisCodes.map(dc => <li key={dc}>{dc}</li>)}</ul>)}
+        {entry.diagnosisCodes && (<ul>{entry.diagnosisCodes.map(dc => <li key={dc}>{dc} {diagnoses[dc].name}</li>)}</ul>)}
       </div>);
       })}
     </>
@@ -24,7 +28,7 @@ const Entries: React.FC<{ entries: Array<Entry> }> = ({ entries }) => {
 const PatientPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const [ patient, setPatient ] = React.useState<Patient | undefined>();
-  const [{ patients }, dispatch] = useStateValue();
+  const [{ patients, diagnoses }, dispatch] = useStateValue();
   React.useEffect(() => {
     const fetchPatientInfo = async () => {
       try {
@@ -67,7 +71,10 @@ const PatientPage: React.FC = () => {
       occupation: {patient.occupation}<br />
       date of birth: {patient.dateOfBirth}
     </p>
-    <Entries entries={patient.entries} />
+    <Entries 
+      entries={patient.entries}
+      diagnoses={diagnoses}
+    />
   </div>);
 };
 
