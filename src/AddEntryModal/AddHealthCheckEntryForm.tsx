@@ -32,6 +32,8 @@ export const AddHealthCheckEntryForm: React.FC<Props> = ({ onSubmit, onCancel })
         }
         if (!values.date) {
           errors.date = requiredError;
+        } else if (!Date.parse(values.date)) {
+          errors.date = "Invalid date";
         }
         if (!values.specialist) {
           errors.specialst = requiredError;
