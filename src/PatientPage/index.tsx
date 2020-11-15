@@ -182,8 +182,15 @@ const PatientPage: React.FC = () => {
       error={error}
       onClose={closeModal}
     />
+    <modals.AddHospiitalEntry
+      modalOpen={modalOpen === 'Hospital'}
+      onSubmit={submitNewEntry}
+      error={error}
+      onClose={closeModal}
+    />
     <Button onClick={() => openModal('HealthCheck')}>Add New Health Check Entry</Button>
     <Button onClick={() => openModal('OccupationalHealthcare')}>Add New Occupational Healthcare Entry</Button>
+    <Button onClick={() => openModal('Hospital')}>Add New Hospital Entry</Button>
     <Entries 
       entries={patient.entries}
       diagnoses={diagnoses}
