@@ -6,8 +6,9 @@ import axios from 'axios';
 import { Diagnosis, HealthCheckRating, Patient, HealthCheckEntry, OccupationalHealthcareEntry, HospitalEntry } from '../types';
 import { apiBaseUrl } from '../constants';
 import { Entry } from '../types';
-import AddHealthCheckEntryModal from '../AddEntryModal';
-import { HealthCheckEntryFormValues } from '../AddEntryModal/AddHealthCheckEntryForm';
+import modals from '../AddEntryModal';
+import { AddEntryFormValues } from '../AddEntryModal/index';
+
 
 const assertNever = (value: never): never => {
   throw new Error(
@@ -74,7 +75,7 @@ interface EntriesProps {
   diagnoses: { [code: string]: Diagnosis };
 }
 
-const Entries: React.FC<EntriesProps> = ({ entries, diagnoses }) => {
+const Entries: React.FC<EntriesProps> = ({ entries }) => {
   return (
     <>
       <Header as="h3">entries</Header>
@@ -93,28 +94,27 @@ const Entries: React.FC<EntriesProps> = ({ entries, diagnoses }) => {
 const PatientPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const [ patient, setPatient ] = React.useState<Patient | undefined>();
-  const [modalOpen, setModalOpen] = React.useState<boolean>(false);
+  const [modalOpen, setModalOpen] = React.useState<string>('');
   const [error, setError] = React.useState<string | undefined>();
   const [{ patients, diagnoses }, dispatch] = useStateValue();
 
-  const openModal = (): void => setModalOpen(true);
+  const openModal = (type: string): void => setModalOpen(type);
 
   const closeModal = (): void => {
-    setModalOpen(false);
+    setModalOpen('');
     setError(undefined);
   };
 
-  const submitNewEntry = async (values: HealthCheckEntryFormValues) => {
+
+  const submitNewEntry = async (values: AddEntryFormValues ) => {
     if (!patient) {
       return;
     }
     try {
-      console.log(values);
       const { data: newEntry } = await axios.post<Entry>(
         `${apiBaseUrl}/patients/${id}/entries`,
         { 
-          ...values,
-          healthCheckRating: values.healthCheckRating.valueOf(),
+          ...values
         }
       );
       const updatedPatient: Patient = {
@@ -170,13 +170,20 @@ const PatientPage: React.FC = () => {
       occupation: {patient.occupation}<br />
       date of birth: {patient.dateOfBirth}
     </p>
-    <AddHealthCheckEntryModal
-      modalOpen={modalOpen}
+    <modals.AddHealthCheckEntryModal
+      modalOpen={modalOpen === 'HealthCheck'}
       onSubmit={submitNewEntry}
       error={error}
       onClose={closeModal}
     />
-    <Button onClick={() => openModal()}>Add New Entry</Button>
+    <modals.AddOccupationalHealthcareEntryModal
+      modalOpen={modalOpen === 'OccupationalHealthcare'}
+      onSubmit={submitNewEntry}
+      error={error}
+      onClose={closeModal}
+    />
+    <Button onClick={() => openModal('HealthCheck')}>Add New Health Check Entry</Button>
+    <Button onClick={() => openModal('OccupationalHealthcare')}>Add New Occupational Healthcare Entry</Button>
     <Entries 
       entries={patient.entries}
       diagnoses={diagnoses}

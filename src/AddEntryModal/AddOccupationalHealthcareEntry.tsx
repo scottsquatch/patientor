@@ -1,18 +1,30 @@
 import React from "react";
 import { Field, Formik, Form } from 'formik';
-import { TextField, DiagnosisSelection, NumberField } from '../AddPatientModal/FormField';
-import { HealthCheckEntry, HealthCheckRating } from "../types";
+import { TextField, DiagnosisSelection } from '../AddPatientModal/FormField';
+import { OccupationalHealthcareEntry } from "../types";
 import { Grid, Button } from "semantic-ui-react";
 import { useStateValue } from "../state/state";
 
-export type HealthCheckEntryFormValues = Omit<HealthCheckEntry, 'id'>;
+export type OccupationalHealthcareEntryFormValues = Omit<OccupationalHealthcareEntry, 'id'>;
 
 interface Props {
-  onSubmit: (values: HealthCheckEntryFormValues) => void;
+  onSubmit: (values: OccupationalHealthcareEntryFormValues) => void;
   onCancel: () => void;
 }
 
-export const AddHealthCheckEntryForm: React.FC<Props> = ({ onSubmit, onCancel }) => {
+interface SickLeaveFormErrors {
+  startDate?: string;
+  endDate?: string;
+}
+
+interface AddOccupationalHealthcareEntryFormErrors {
+  description?: string;
+  date?: string;
+  specialist?: string;
+  employerName?: string;
+  sickLeave?: SickLeaveFormErrors;
+}
+export const AddOccupationalHealthcareEntryForm: React.FC<Props> = ({ onSubmit, onCancel }) => {
   const [{ diagnoses }] = useStateValue();
   return (
     <Formik
@@ -20,23 +32,37 @@ export const AddHealthCheckEntryForm: React.FC<Props> = ({ onSubmit, onCancel })
         description: "",
         date: "",
         specialist: "",
-        healthCheckRating: HealthCheckRating.Healthy,
+        employerName: "",
+        sickLeave: {
+          startDate: '',
+          endDate: ''
+        },
         diagnosisCodes: []
       }}
-      onSubmit={values => onSubmit({ ...values, type: "HealthCheck" })}
+      onSubmit={values => onSubmit({ ...values, type: "OccupationalHealthcare" })}
       validate={values => {
         const requiredError = "Field is required";
-        const errors: { [field: string]: string } = {};
+        const invalidDate = "Invalid date";
+        const errors: AddOccupationalHealthcareEntryFormErrors = {};
         if (!values.description) {
           errors.description = requiredError;
         }
         if (!values.date) {
           errors.date = requiredError;
         } else if (!Date.parse(values.date)) {
-          errors.date = "Invalid date";
+          errors.date = invalidDate;
         }
         if (!values.specialist) {
           errors.specialist = requiredError;
+        }
+        if (!values.employerName) {
+          errors.employerName = requiredError;
+        }
+        if (values.sickLeave.startDate && !Date.parse(values.sickLeave.startDate)) {
+          errors.sickLeave = { ...errors.sickLeave, startDate: invalidDate };
+        }
+        if (values.sickLeave.endDate && !Date.parse(values.sickLeave.endDate)) {
+          errors.sickLeave = { ...errors.sickLeave, endDate: invalidDate };
         }
         return errors;
       }}
@@ -63,11 +89,22 @@ export const AddHealthCheckEntryForm: React.FC<Props> = ({ onSubmit, onCancel })
               component={TextField}
             />
             <Field
-              label="healthCheckRating"
-              name="healthCheckRating"
-              component={NumberField}
-              min={0}
-              max={3}
+              label="Employer Name"
+              placeholder="Employer Name"
+              name="employerName"
+              component={TextField}
+            />
+            <Field
+              label="Sick Leave Start Date"
+              placeholder="YYYY-MM-DD"
+              name="sickLeave.startDate"
+              component={TextField}
+            />
+            <Field
+              label="Sick Leave End Date"
+              placeholder="YYYY-MM-DD"
+              name="sickLeave.endDate"
+              component={TextField}
             />
             <DiagnosisSelection
               setFieldValue={setFieldValue}
@@ -98,4 +135,4 @@ export const AddHealthCheckEntryForm: React.FC<Props> = ({ onSubmit, onCancel })
   );
 };
 
-export default AddHealthCheckEntryForm;
+export default AddOccupationalHealthcareEntryForm;
